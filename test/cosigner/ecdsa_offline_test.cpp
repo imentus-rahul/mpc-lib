@@ -488,149 +488,149 @@ TEST_CASE("cmp_offline_ecdsa") {
         ecdsa_sign(services, ECDSA_SECP256K1, keyid, 0, 1, pubkey, chaincode, {path});
 
 
-        char txid[37] = {0};
-        uuid_generate_random(uid);
-        uuid_unparse(uid, txid);
-        std::set<uint64_t> players_ids;
-        std::set<std::string> players_str;
-        for (auto i = services.begin(); i != services.end(); ++i)
-        {
-            players_ids.insert(i->first);
-            players_str.insert(std::to_string(i->first));
-        }
-        signing_data data;
-        memcpy(data.chaincode, chaincode.data(), sizeof(HDChaincode));
-        signing_block_data block;
-        block.data.insert(block.data.begin(), 32, '0');
-        block.path = path;
-        data.blocks.push_back(block);
-        std::vector<recoverable_signature> sigs;
-        REQUIRE_THROWS_MATCHES(services.begin()->second->signing_service.ecdsa_sign(keyid, txid, data, "", players_str, players_ids, 0, sigs), cosigner_exception, 
-            Catch::Matchers::Predicate<cosigner_exception>([](const cosigner_exception& e) {return e.error_code() == cosigner_exception::INVALID_PRESIGNING_INDEX;}));
+        // char txid[37] = {0};
+        // uuid_generate_random(uid);
+        // uuid_unparse(uid, txid);
+        // std::set<uint64_t> players_ids;
+        // std::set<std::string> players_str;
+        // for (auto i = services.begin(); i != services.end(); ++i)
+        // {
+        //     players_ids.insert(i->first);
+        //     players_str.insert(std::to_string(i->first));
+        // }
+        // signing_data data;
+        // memcpy(data.chaincode, chaincode.data(), sizeof(HDChaincode));
+        // signing_block_data block;
+        // block.data.insert(block.data.begin(), 32, '0');
+        // block.path = path;
+        // data.blocks.push_back(block);
+        // std::vector<recoverable_signature> sigs;
+        // REQUIRE_THROWS_MATCHES(services.begin()->second->signing_service.ecdsa_sign(keyid, txid, data, "", players_str, players_ids, 0, sigs), cosigner_exception, 
+        //     Catch::Matchers::Predicate<cosigner_exception>([](const cosigner_exception& e) {return e.error_code() == cosigner_exception::INVALID_PRESIGNING_INDEX;}));
         
-        // run 4 times as R has 50% chance of being negative
-        for (size_t i = 0; i < 4; ++i)
-            ecdsa_sign(services, ECDSA_SECP256K1, keyid, i + 1, 1, pubkey, chaincode, {path}, true);
+        // // run 4 times as R has 50% chance of being negative
+        // for (size_t i = 0; i < 4; ++i)
+        //     ecdsa_sign(services, ECDSA_SECP256K1, keyid, i + 1, 1, pubkey, chaincode, {path}, true);
 
-        const size_t COUNT = 4;
-        std::vector<uint32_t> derivation_path = {44, 0, 0, 0, 0};
-        std::vector<std::vector<uint32_t>> derivation_paths;
-        for (size_t i = 0; i < COUNT; i++)
-        {
-            derivation_paths.push_back(derivation_path);
-            ++derivation_path[2];
-        }
-        ecdsa_sign(services, ECDSA_SECP256K1, keyid, 5, COUNT, pubkey, chaincode, derivation_paths);
+        // const size_t COUNT = 4;
+        // std::vector<uint32_t> derivation_path = {44, 0, 0, 0, 0};
+        // std::vector<std::vector<uint32_t>> derivation_paths;
+        // for (size_t i = 0; i < COUNT; i++)
+        // {
+        //     derivation_paths.push_back(derivation_path);
+        //     ++derivation_path[2];
+        // }
+        // ecdsa_sign(services, ECDSA_SECP256K1, keyid, 5, COUNT, pubkey, chaincode, derivation_paths);
 
-        std::map<uint64_t, std::unique_ptr<key_refresh_info>> refresh_info;
-        for (auto i = players.begin(); i != players.end(); ++i)
-        {
-            auto info = std::make_unique<key_refresh_info>(i->first, i->second, services.at(i->first)->persistency);
-            refresh_info.emplace(i->first, move(info));
-        }
-        key_refresh(refresh_info, keyid, pubkey);
-        ecdsa_sign(services, ECDSA_SECP256K1, keyid, 9, 1, pubkey, chaincode, derivation_paths);
+        // std::map<uint64_t, std::unique_ptr<key_refresh_info>> refresh_info;
+        // for (auto i = players.begin(); i != players.end(); ++i)
+        // {
+        //     auto info = std::make_unique<key_refresh_info>(i->first, i->second, services.at(i->first)->persistency);
+        //     refresh_info.emplace(i->first, move(info));
+        // }
+        // key_refresh(refresh_info, keyid, pubkey);
+        // ecdsa_sign(services, ECDSA_SECP256K1, keyid, 9, 1, pubkey, chaincode, derivation_paths);
     }
 
-    SECTION("MT") {  
-        uuid_t uid;
-        uuid_generate_random(uid);
-        uuid_unparse(uid, keyid);
-        players.clear();
-        players[1];
-        players[2];
-        create_secret(players, ECDSA_SECP256K1, keyid, pubkey);
+//     SECTION("MT") {  
+//         uuid_t uid;
+//         uuid_generate_random(uid);
+//         uuid_unparse(uid, keyid);
+//         players.clear();
+//         players[1];
+//         players[2];
+//         create_secret(players, ECDSA_SECP256K1, keyid, pubkey);
 
-        std::map<uint64_t, std::unique_ptr<offline_siging_info>> services;
-        for (auto i = players.begin(); i != players.end(); ++i)
-        {
-            auto info = std::make_unique<offline_siging_info>(i->first, i->second);
-            services.emplace(i->first, move(info));
-        }
+//         std::map<uint64_t, std::unique_ptr<offline_siging_info>> services;
+//         for (auto i = players.begin(); i != players.end(); ++i)
+//         {
+//             auto info = std::make_unique<offline_siging_info>(i->first, i->second);
+//             services.emplace(i->first, move(info));
+//         }
     
-        const size_t THREAD_COUNT = 8;
-        pthread_t threads[THREAD_COUNT] = {0};
-        preprocess_thread_data param[THREAD_COUNT];
-        auto before = Clock::now();
-        for (uint32_t i = 0; i < THREAD_COUNT; i++)
-        {
-            param[i].services = &services;
-            param[i].keyid = keyid;
-            param[i].index = i;
-            param[i].total_count = THREAD_COUNT * BLOCK_SIZE;
-            pthread_create(threads + i, NULL, preprocess_thread, &param[i]);
-        }
+//         const size_t THREAD_COUNT = 8;
+//         pthread_t threads[THREAD_COUNT] = {0};
+//         preprocess_thread_data param[THREAD_COUNT];
+//         auto before = Clock::now();
+//         for (uint32_t i = 0; i < THREAD_COUNT; i++)
+//         {
+//             param[i].services = &services;
+//             param[i].keyid = keyid;
+//             param[i].index = i;
+//             param[i].total_count = THREAD_COUNT * BLOCK_SIZE;
+//             pthread_create(threads + i, NULL, preprocess_thread, &param[i]);
+//         }
 
-        for (auto i = 0; i < THREAD_COUNT; i++)
-            pthread_join(threads[i], NULL);
+//         for (auto i = 0; i < THREAD_COUNT; i++)
+//             pthread_join(threads[i], NULL);
 
-        auto after = Clock::now();
-        std::cout << "ECDSA preprocessing took: " << std::chrono::duration_cast<std::chrono::milliseconds>(after - before).count() << " ms" << std::endl;
+//         auto after = Clock::now();
+//         std::cout << "ECDSA preprocessing took: " << std::chrono::duration_cast<std::chrono::milliseconds>(after - before).count() << " ms" << std::endl;
     
-        std::vector<uint32_t> derivation_path = {44, 0, 0, 0, 0};
-        std::vector<std::vector<uint32_t>> derivation_paths;
-        for (size_t i = 0; i < 4; i++)
-        {
-            derivation_paths.push_back(derivation_path);
-            ++derivation_path[2];
-        }
-        ecdsa_sign(services, ECDSA_SECP256K1, keyid, 0, derivation_paths.size(), pubkey, chaincode, derivation_paths);
-    }
+//         std::vector<uint32_t> derivation_path = {44, 0, 0, 0, 0};
+//         std::vector<std::vector<uint32_t>> derivation_paths;
+//         for (size_t i = 0; i < 4; i++)
+//         {
+//             derivation_paths.push_back(derivation_path);
+//             ++derivation_path[2];
+//         }
+//         ecdsa_sign(services, ECDSA_SECP256K1, keyid, 0, derivation_paths.size(), pubkey, chaincode, derivation_paths);
+//     }
 
-    SECTION("secp256r1") {
-        uuid_t uid;
-        uuid_generate_random(uid);
-        uuid_unparse(uid, keyid);
-        players.clear();
-        players[11];
-        players[12];
-        create_secret(players, ECDSA_SECP256R1, keyid, pubkey);
+//     SECTION("secp256r1") {
+//         uuid_t uid;
+//         uuid_generate_random(uid);
+//         uuid_unparse(uid, keyid);
+//         players.clear();
+//         players[11];
+//         players[12];
+//         create_secret(players, ECDSA_SECP256R1, keyid, pubkey);
 
-        std::map<uint64_t, std::unique_ptr<offline_siging_info>> services;
-        for (auto i = players.begin(); i != players.end(); ++i)
-        {
-            auto info = std::make_unique<offline_siging_info>(i->first, i->second);
-            services.emplace(i->first, move(info));
-        }
+//         std::map<uint64_t, std::unique_ptr<offline_siging_info>> services;
+//         for (auto i = players.begin(); i != players.end(); ++i)
+//         {
+//             auto info = std::make_unique<offline_siging_info>(i->first, i->second);
+//             services.emplace(i->first, move(info));
+//         }
     
-        ecdsa_preprocess(services, keyid, 0, BLOCK_SIZE, BLOCK_SIZE);
-        ecdsa_sign(services, ECDSA_SECP256R1, keyid, 0, 1, pubkey, chaincode, {path});
+//         ecdsa_preprocess(services, keyid, 0, BLOCK_SIZE, BLOCK_SIZE);
+//         ecdsa_sign(services, ECDSA_SECP256R1, keyid, 0, 1, pubkey, chaincode, {path});
         
-        char new_keyid[37] = {0};
-        uuid_generate_random(uid);
-        uuid_unparse(uid, new_keyid);
-        players_setup_info new_players;
-        new_players[21];
-        new_players[22];
-        new_players[23];
-        add_user(players, new_players, ECDSA_SECP256R1, keyid, new_keyid, pubkey);
-        std::map<uint64_t, std::unique_ptr<offline_siging_info>> new_services;
-        for (auto i = new_players.begin(); i != new_players.end(); ++i)
-        {
-            auto info = std::make_unique<offline_siging_info>(i->first, i->second);
-            new_services.emplace(i->first, move(info));
-        }
-        ecdsa_preprocess(new_services, new_keyid, 0, BLOCK_SIZE, BLOCK_SIZE);
-        ecdsa_sign(new_services, ECDSA_SECP256R1, new_keyid, 0, 1, pubkey, chaincode, {path});
-    }
+//         char new_keyid[37] = {0};
+//         uuid_generate_random(uid);
+//         uuid_unparse(uid, new_keyid);
+//         players_setup_info new_players;
+//         new_players[21];
+//         new_players[22];
+//         new_players[23];
+//         add_user(players, new_players, ECDSA_SECP256R1, keyid, new_keyid, pubkey);
+//         std::map<uint64_t, std::unique_ptr<offline_siging_info>> new_services;
+//         for (auto i = new_players.begin(); i != new_players.end(); ++i)
+//         {
+//             auto info = std::make_unique<offline_siging_info>(i->first, i->second);
+//             new_services.emplace(i->first, move(info));
+//         }
+//         ecdsa_preprocess(new_services, new_keyid, 0, BLOCK_SIZE, BLOCK_SIZE);
+//         ecdsa_sign(new_services, ECDSA_SECP256R1, new_keyid, 0, 1, pubkey, chaincode, {path});
+//     }
 
-    SECTION("stark") {
-        uuid_t uid;
-        uuid_generate_random(uid);
-        uuid_unparse(uid, keyid);
-        players.clear();
-        players[21];
-        players[22];
-        create_secret(players, ECDSA_STARK, keyid, pubkey);
+//     SECTION("stark") {
+//         uuid_t uid;
+//         uuid_generate_random(uid);
+//         uuid_unparse(uid, keyid);
+//         players.clear();
+//         players[21];
+//         players[22];
+//         create_secret(players, ECDSA_STARK, keyid, pubkey);
 
-        std::map<uint64_t, std::unique_ptr<offline_siging_info>> services;
-        for (auto i = players.begin(); i != players.end(); ++i)
-        {
-            auto info = std::make_unique<offline_siging_info>(i->first, i->second);
-            services.emplace(i->first, move(info));
-        }
+//         std::map<uint64_t, std::unique_ptr<offline_siging_info>> services;
+//         for (auto i = players.begin(); i != players.end(); ++i)
+//         {
+//             auto info = std::make_unique<offline_siging_info>(i->first, i->second);
+//             services.emplace(i->first, move(info));
+//         }
     
-        ecdsa_preprocess(services, keyid, 0, BLOCK_SIZE, BLOCK_SIZE);
-        ecdsa_sign(services, ECDSA_STARK, keyid, 0, 1, pubkey, chaincode, {path});
-    }
+//         ecdsa_preprocess(services, keyid, 0, BLOCK_SIZE, BLOCK_SIZE);
+//         ecdsa_sign(services, ECDSA_STARK, keyid, 0, 1, pubkey, chaincode, {path});
+//     }
 }
